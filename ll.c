@@ -94,13 +94,13 @@ int main(int argc, char** argv){
 	}
 
 	char *str = get_mode_string_from_modenumber(buff.st_mode);
-	printf("Mode:%s\n", str);
+	printf("%s ", str);
 	free(str);
 
-	printf("Link number:%ld\n", buff.st_nlink);
-	printf("owner id:%s\n", get_username_by_uid(buff.st_uid));
-	printf("group id:%s\n", get_groupname_by_gid(buff.st_gid));
-	printf("file size:%ld\n", buff.st_size);
-	printf("Time of last access:%s", ctime(&buff.st_atime));
+	printf("%ld ", buff.st_nlink);
+	printf("%s ", get_username_by_uid(buff.st_uid));
+	printf("%s ", get_groupname_by_gid(buff.st_gid));
+	printf("%ld ", buff.st_size);
+	printf("%s", ctime(&buff.st_atime));
 	return 0;
 }
