@@ -28,8 +28,63 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <pwd.h>
 #include <time.h>
+#include <grp.h>
+#include <string.h>
+
+
+#define S_U_R(m) (((m) & S_IRUSR) == S_IRUSR)
+#define S_U_W(m) (((m) & S_IWUSR) == S_IWUSR)
+#define S_U_X(m) (((m) & S_IXUSR) == S_IXUSR)
+
+#define S_G_R(m) (((m) & S_IRGRP) == S_IRGRP)
+#define S_G_W(m) (((m) & S_IWGRP) == S_IWGRP)
+#define S_G_X(m) (((m) & S_IXGRP) == S_IXGRP)
+
+#define S_O_R(m) (((m) & S_IROTH) == S_IROTH)
+#define S_O_W(m) (((m) & S_IWOTH) == S_IWOTH)
+#define S_O_X(m) (((m) & S_IXOTH) == S_IXOTH)
+
+
+char* get_username_by_uid(uid_t uid){
+	struct passwd *pwd = getpwuid(uid);// read from /etc/passwd
+	return pwd->pw_name;
+}
+
+
+char* get_groupname_by_gid(gid_t gid){
+	struct group *grp = getgrgid(gid);// read from /etc/group
+	return grp->gr_name;
+}
+
+
+char* get_mode_string_from_modenumber(mode_t mode){
+	char* output = (char*)malloc(10*sizeof(char));
+        strcpy(output, "----------");
+	
+	if(S_ISDIR(mode)) output[0]='d';
+	else if(S_ISCHR(mode)) output[0]='c';
+	else if(S_ISBLK(mode)) output[0]='b';
+	else if(S_ISLNK(mode)) output[0]='l';
+	else if(S_ISFIFO(mode)) output[0]='f';
+	else if(S_ISSOCK(mode)) output[0]='s';
+
+	if(S_U_R(mode)) output[1]='r';
+	if(S_U_W(mode)) output[2]='w';
+	if(S_U_X(mode)) output[3]='x';
+	if(S_G_R(mode)) output[4]='r';
+	if(S_G_W(mode)) output[5]='w';
+	if(S_G_X(mode)) output[6]='x';
+	if(S_O_R(mode)) output[7]='r';
+	if(S_O_W(mode)) output[8]='w';
+	if(S_O_X(mode)) output[9]='x';
+
+	return output;
+}
+
+
 int main(int argc, char** argv){
 	struct stat buff;
 	int output = stat(argv[1], &buff);
@@ -38,7 +93,14 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
-	printf("Inode Number:%ld\n", buff.st_ino);
+	char *str = get_mode_string_from_modenumber(buff.st_mode);
+	printf("Mode:%s\n", str);
+	free(str);
+
+	printf("Link number:%ld\n", buff.st_nlink);
+	printf("owner id:%s\n", get_username_by_uid(buff.st_uid));
+	printf("group id:%s\n", get_groupname_by_gid(buff.st_gid));
+	printf("file size:%ld\n", buff.st_size);
 	printf("Time of last access:%s", ctime(&buff.st_atime));
 	return 0;
 }
