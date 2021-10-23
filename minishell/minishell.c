@@ -4,6 +4,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
+#include <pwd.h>
+
 #define ARGVLEN 32
 #define STRLEN 128
 
@@ -15,7 +17,7 @@ void read_analyse_cmd(char *str, char *args[]){
 	char c = 0;
 	while(1){	
 			
-		c = getchar();
+		c = getchar();   //loop stop here, to wait for stdin input
 		if(c==' ' || c=='\t' || c=='\n'){
 			if(i==0){
 				if(c=='\n') 
@@ -41,6 +43,8 @@ void read_analyse_cmd(char *str, char *args[]){
 
 
 void run_cmd(char *argv[]){
+	if(argv[0]==NULL)  //only input '\n'
+		return;
 	int p_stat = vfork();
 	if(p_stat == 0){
 		if(execvp(argv[0],argv) == -1){
@@ -60,10 +64,22 @@ void run_cmd(char *argv[]){
 	return;
 }
 
+
+int print_cmd_prefix(void){
+	struct passwd *mypwd = getpwuid(getuid());
+	char *buff=(char*)malloc(sizeof(char)*128);
+	getcwd(buff,128);
+	printf("\033[32;1m%s@minishell\033[0m:\033[34;1m%s\033[0m$ ",mypwd->pw_name,buff);
+	free(buff);
+	return 0;
+}
+
+
 int main(void){
 	char str[STRLEN] ={0}; 
 	char *args[ARGVLEN] = {NULL};
 	while(1){
+		print_cmd_prefix();
 		read_analyse_cmd(str,args);
 		run_cmd(args);
 		memset(str,0,sizeof(char)*STRLEN);
