@@ -29,7 +29,7 @@ int main(void){
 
 	handler.signum = SIGHUP;handler.handler = add;
 	signal(handler.signum, handler.handler);
-
-	while(1);
+	pause();
+	//while(1);
 	return 0;
 }
