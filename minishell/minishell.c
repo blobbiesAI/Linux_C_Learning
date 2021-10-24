@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <pwd.h>
-
+#include "buildin_cmd.h"
 #define ARGVLEN 32
 #define STRLEN 128
 
@@ -69,7 +69,7 @@ int print_cmd_prefix(void){
 	struct passwd *mypwd = getpwuid(getuid());
 	char *buff=(char*)malloc(sizeof(char)*128);
 	getcwd(buff,128);
-	printf("\033[32;1m%s@minishell\033[0m:\033[34;1m%s\033[0m$ ",mypwd->pw_name,buff);
+	printf("\033[33;1m%s@minishell\033[0m:\033[34;1m%s\033[0m>>> ",mypwd->pw_name,buff);
 	free(buff);
 	return 0;
 }
@@ -79,8 +79,12 @@ int main(void){
 	char str[STRLEN] ={0}; 
 	char *args[ARGVLEN] = {NULL};
 	while(1){
-		print_cmd_prefix();
-		read_analyse_cmd(str,args);
+		print_cmd_prefix();  //printf xiaobo@ubuntu:$
+		read_analyse_cmd(str,args); //reload args
+		if(args[0]==NULL)  //only input '\n'
+                	continue;
+		if(read_analyse_buildin_cmd(args)==0) //check if buildin cmd
+			continue;
 		run_cmd(args);
 		memset(str,0,sizeof(char)*STRLEN);
 		memset(args,0,sizeof(char*)*ARGVLEN);
