@@ -20,10 +20,12 @@ void read_analyse_cmd(char *str, char *args[]){
 	while(1){	
 			
 		c = getchar();   //loop stop here, to wait for stdin input
-		if(c==' ' || c=='\t' || c=='\n'){
+		if(c==' ' || c=='\t' || c=='\n' || c=='|'){
 			if(i==0){
 				if(c=='\n') 
 					break;  //exit when we have kong ge after last variable
+				else if(c=='|')
+					p[i++] = c;
 				continue;
 			}
 			else{
@@ -33,6 +35,13 @@ void read_analyse_cmd(char *str, char *args[]){
 			       	i=0;
 				if(c=='\n')
 					break; //exit when we donot have kong ge after last variable	
+				else if(c=='|'){
+					p[i++] = c;
+					p[i++] = '\0';
+					args[j++] = p;
+					p +=i;
+					i=0;
+				}
 			}
 		}
 		else{
@@ -44,6 +53,11 @@ void read_analyse_cmd(char *str, char *args[]){
 		}
 			
 	}
+
+//	for(int m=0;m<5;m++){
+//		printf("%s\n",args[m]);
+//	}
+
 	return;	
 }
 
@@ -87,9 +101,30 @@ int print_cmd_prefix(void){
 }
 
 
+int is_pipe_cmd(char *args[]){
+	int i = 0;
+	while(args[i]!=NULL){
+		if(strcmp(args[i],"|")==0)
+			return i;
+		i++;
+	}
+	return -1;
+}
+
+
+
+
+//void run_pipe_cmd(int pipe,char *args[]){
+//	
+//}
+
+
+
+
 int main(void){
 	char str[STRLEN] ={0}; 
 	char *args[ARGVLEN] = {NULL};
+	
 	while(1){
 		print_cmd_prefix();  //printf xiaobo@ubuntu:$
 		read_analyse_cmd(str,args); //reload args
@@ -97,7 +132,9 @@ int main(void){
                 	continue;
 		if(read_analyse_buildin_cmd(args)==0) //check if buildin cmd
 			goto here;
-		run_cmd(args);
+		
+		if(is_pipe_cmd(args)==-1)
+			run_cmd(args);
 here:
 		memset(str,0,sizeof(char)*STRLEN);
 		memset(args,0,sizeof(char*)*ARGVLEN);
