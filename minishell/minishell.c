@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <pwd.h>
+#include <signal.h>
 #include "buildin_cmd.h"
 #define ARGVLEN 32
 #define STRLEN 128
@@ -43,10 +44,9 @@ void read_analyse_cmd(char *str, char *args[]){
 
 
 void run_cmd(char *argv[]){
-	if(argv[0]==NULL)  //only input '\n'
-		return;
 	int p_stat = vfork();
 	if(p_stat == 0){
+		signal(SIGINT,SIG_DFL);	
 		if(execvp(argv[0],argv) == -1){
 			perror("execvp");
 			_exit(-1);
@@ -55,6 +55,7 @@ void run_cmd(char *argv[]){
 			
 	}
 	else if(p_stat > 0){
+		signal(SIGINT,SIG_IGN);
 		wait(NULL);
 	}
 	else{
@@ -84,8 +85,9 @@ int main(void){
 		if(args[0]==NULL)  //only input '\n'
                 	continue;
 		if(read_analyse_buildin_cmd(args)==0) //check if buildin cmd
-			continue;
+			goto here;
 		run_cmd(args);
+here:
 		memset(str,0,sizeof(char)*STRLEN);
 		memset(args,0,sizeof(char*)*ARGVLEN);
 	}
