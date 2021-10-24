@@ -10,6 +10,7 @@
 #define ARGVLEN 32
 #define STRLEN 128
 
+int is_background=0;
 
 void read_analyse_cmd(char *str, char *args[]){
 	//char str[STRLEN] = {0};  //ls\0-a\0-l\0
@@ -35,6 +36,10 @@ void read_analyse_cmd(char *str, char *args[]){
 			}
 		}
 		else{
+			if(c=='&'){
+				is_background = 1;//creat a flag
+				continue;  //do not put & in args, it just a biaozhi
+			}
 			p[i++] = c;
 		}
 			
@@ -44,7 +49,7 @@ void read_analyse_cmd(char *str, char *args[]){
 
 
 void run_cmd(char *argv[]){
-	int p_stat = vfork();
+	int p_stat = fork();
 	if(p_stat == 0){
 		signal(SIGINT,SIG_DFL);	
 		if(execvp(argv[0],argv) == -1){
@@ -54,9 +59,15 @@ void run_cmd(char *argv[]){
 		_exit(0);
 			
 	}
-	else if(p_stat > 0){
+	else if(p_stat > 0 && is_background==0){
 		signal(SIGINT,SIG_IGN);
+		signal(SIGCHLD,SIG_DFL);
 		wait(NULL);
+	}
+	else if(p_stat >0 && is_background==1){//enable background running
+		signal(SIGCHLD,SIG_IGN);
+		signal(SIGINT,SIG_IGN);
+		is_background=0;
 	}
 	else{
 		perror("fork");
