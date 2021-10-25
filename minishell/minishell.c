@@ -9,6 +9,7 @@
 #include "buildin_cmd.h"
 #define ARGVLEN 32
 #define STRLEN 128
+#define SPLITLEN 10
 
 int is_background=0;
 
@@ -101,30 +102,74 @@ int print_cmd_prefix(void){
 }
 
 
-int is_pipe_cmd(char *args[]){
+
+
+int split_args(int split_id[], char *args[]){
 	int i = 0;
+	int j = 1;
 	while(args[i]!=NULL){
-		if(strcmp(args[i],"|")==0)
-			return i;
+		if(strcmp(args[i],"|")==0){
+			args[i] = NULL;	
+			split_id[j++] = i+1;		
+		}
 		i++;
 	}
-	return -1;
+	return j;
 }
 
 
 
+int run_pipe_cmd(int fork_num, int split_id[], char *args[]){
+	int pipefd[2]={0};
+	pipe(pipefd);
 
-//void run_pipe_cmd(int pipe,char *args[]){
-//	
-//}
+	while(){
+	
+	}
 
+
+	int p_stat = fork();
+	if(p_stat == 0){
+		signal(SIGINT,SIG_DFL);
+
+		dup2(pipefd[1],1);
+		execvp(args[split_id[0]],args+split_id[0]);
+		_exit(0);	
+	}
+	else if(p_stat > 0 && is_background==0){
+		signal(SIGINT,SIG_IGN);
+		signal(SIGCHLD,SIG_DFL);
+
+		wait(NULL);
+
+		close(pipefd[1]);//????????why here, must have and must in parent process
+		dup2(pipefd[0],0);		
+		execvp(args[split_id[1]],args+split_id[1]);
+	}
+	else if(p_stat > 0 && is_background==1){
+		signal(SIGCHLD,SIG_IGN);
+		signal(SIGINT,SIG_IGN);
+		close(pipefd[1]);//????????why here, must have and must in parent process
+		dup2(pipefd[0],0);
+		execvp(args[split_id[1]],args+split_id[1]);
+
+		is_background=0;
+	}
+	else{
+		perror("fork");
+		exit(-1);
+	}
+	return 0;
+}
 
 
 
 int main(void){
 	char str[STRLEN] ={0}; 
 	char *args[ARGVLEN] = {NULL};
-	
+	int split_id[SPLITLEN] = {0};
+	int fork_num = 1;
+
 	while(1){
 		print_cmd_prefix();  //printf xiaobo@ubuntu:$
 		read_analyse_cmd(str,args); //reload args
@@ -133,11 +178,20 @@ int main(void){
 		if(read_analyse_buildin_cmd(args)==0) //check if buildin cmd
 			goto here;
 		
-		if(is_pipe_cmd(args)==-1)
+		fork_num = split_args(split_id, args);
+
+		for(int m =0;m<10;m++){
+			printf("%d ",split_id[m]);
+		}
+
+		if(fork_num==1)
 			run_cmd(args);
+		else
+			run_pipe_cmd(fork_num, split_id, args);
 here:
 		memset(str,0,sizeof(char)*STRLEN);
 		memset(args,0,sizeof(char*)*ARGVLEN);
+		memset(split_id,0,sizeof(int)*SPLITLEN);
 	}
 	return 0;
 }
