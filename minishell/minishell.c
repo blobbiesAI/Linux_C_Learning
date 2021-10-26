@@ -16,14 +16,14 @@
 
 int is_background=0;
 
-void read_analyse_cmd(char *str, char *args[]){
+void read_analyse_cmd(FILE* f ,char *str, char *args[]){
 	//char str[STRLEN] = {0};  //ls\0-a\0-l\0
 	int i = 0;int j = 0;
 	char *p = str;
 	char c = 0;
 	while(1){	
-			
-		c = getchar();   //loop stop here, to wait for stdin input
+		c = getc(f);	
+		//c = getchar();   //loop stop here, to wait for stdin input
 		if(c==' ' || c=='\t' || c=='\n' || c=='|'){
 			if(i==0){
 				if(c=='\n') 
@@ -166,6 +166,8 @@ int run_pipe_cmd(int fork_num, int split_id[], char *args[]){
 }
 
 
+
+
 /*
 	pipe(pipefd); // 3 4
 	p_stat = fork();
@@ -285,6 +287,7 @@ int run_pipe_cmd(int fork_num, int split_id[], char *args[]){
 }
 
 */
+int run_script_cmd(char *pathname, char* str, char *args[]);
 
 int main(void){
 	char str[STRLEN] ={0}; 
@@ -292,9 +295,14 @@ int main(void){
 	int split_id[SPLITLEN] = {0};
 	int fork_num = 1;
 
+	//script
+	char script_str[STRLEN] ={0};
+        char *script_args[ARGVLEN] = {NULL};
+
+
 	while(1){
 		print_cmd_prefix();  //printf xiaobo@ubuntu:$
-		read_analyse_cmd(str,args); //reload args
+		read_analyse_cmd(stdin, str,args); //reload args
 		if(args[0]==NULL)  //only input '\n'
                 	continue;
 		if(read_analyse_buildin_cmd(args)==0) //check if buildin cmd
@@ -306,8 +314,12 @@ int main(void){
 		//	printf("%d ",split_id[m]);
 		//}
 
-		if(fork_num==1)
-			run_cmd(args);
+		if(fork_num==1){
+			if(strstr(args[0],".sh"))
+				run_script_cmd(args[0],script_str,script_args);
+			else
+				run_cmd(args);
+		}
 		else
 			run_pipe_cmd(fork_num, split_id, args);
 here:
