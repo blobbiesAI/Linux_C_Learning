@@ -10,7 +10,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "buildin_cmd.h"
-#include "variable_cmd.h"
+//#include "variable_cmd.h"
+#include "variable_cmd_v2.h"
 
 #define ARGVLEN 32
 #define STRLEN 128
@@ -18,8 +19,6 @@
 #define ENVMASIZE 10
 int is_background=0;
 int env_num = 0;
-
-
 void read_analyse_cmd(FILE* f ,char *str, char *args[]){
 	//char str[STRLEN] = {0};  //ls\0-a\0-l\0
 	int i = 0;int j = 0;
@@ -304,15 +303,16 @@ int main(void){
         char *script_args[ARGVLEN] = {NULL};
 
 	//env
-	env wxb_env[ENVMASIZE]={0};
-
+	//env wxb_env[ENVMASIZE]={0};
+	char *minishell_var[100] = {NULL};
+	env_init_cmd(minishell_var);
 
 	while(1){
 		print_cmd_prefix();  //printf xiaobo@ubuntu:$
 		read_analyse_cmd(stdin, str,args); //reload args
 		if(args[0]==NULL)  //only input '\n'
                 	continue;
-		if(read_analyse_buildin_cmd(args)==0) //check if buildin cmd
+		if(read_analyse_buildin_cmd(args, minishell_var)==0) //check if buildin cmd
 			goto here;
 		
 		fork_num = split_args(split_id, args);
@@ -325,7 +325,7 @@ int main(void){
 			if(strstr(args[0],".sh"))
 				run_script_cmd(args[0],script_str,script_args);
 			else if(is_variable_cmd(args)){
-				run_variable_cmd(args, wxb_env);
+				run_variable_cmd(args, minishell_var);
 			}
 			else
 				run_cmd(args);
