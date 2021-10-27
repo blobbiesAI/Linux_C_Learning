@@ -10,11 +10,15 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "buildin_cmd.h"
+#include "variable_cmd.h"
+
 #define ARGVLEN 32
 #define STRLEN 128
 #define SPLITLEN 10
-
+#define ENVMASIZE 10
 int is_background=0;
+int env_num = 0;
+
 
 void read_analyse_cmd(FILE* f ,char *str, char *args[]){
 	//char str[STRLEN] = {0};  //ls\0-a\0-l\0
@@ -299,6 +303,9 @@ int main(void){
 	char script_str[STRLEN] ={0};
         char *script_args[ARGVLEN] = {NULL};
 
+	//env
+	env wxb_env[ENVMASIZE]={0};
+
 
 	while(1){
 		print_cmd_prefix();  //printf xiaobo@ubuntu:$
@@ -317,6 +324,9 @@ int main(void){
 		if(fork_num==1){
 			if(strstr(args[0],".sh"))
 				run_script_cmd(args[0],script_str,script_args);
+			else if(is_variable_cmd(args)){
+				run_variable_cmd(args, wxb_env);
+			}
 			else
 				run_cmd(args);
 		}
