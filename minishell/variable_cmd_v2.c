@@ -46,6 +46,7 @@ int env_free_cmd(char **minishell_var){
 }
 
 int run_set_cmd(char **minishell_var){
+
 	for(int i=0;i<env_num;i++){
 		printf("%s\n",minishell_var[i]);
 	}
@@ -87,8 +88,10 @@ int run_equal_cmd(char *argv[], char **minishell_var){
 
 
 int run_variable_cmd(char *argv[], char **minishell_var){
-	if(strcmp(argv[0], "set")==0)
+	if(strcmp(argv[0], "set")==0){
+		//env_init_cmd(minishell_var);
 		run_set_cmd(minishell_var);
+	}
 	else if(strcmp(argv[0], "unset")==0)
 		run_unset_cmd(argv, minishell_var);	
 	else{

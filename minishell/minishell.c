@@ -308,6 +308,7 @@ int main(void){
 	env_init_cmd(minishell_var);
 
 	while(1){
+		//env_init_cmd(minishell_var);
 		print_cmd_prefix();  //printf xiaobo@ubuntu:$
 		read_analyse_cmd(stdin, str,args); //reload args
 		if(args[0]==NULL)  //only input '\n'
